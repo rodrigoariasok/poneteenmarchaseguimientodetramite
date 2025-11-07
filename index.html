@@ -1,0 +1,68 @@
+<!-- Fuente moderna -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+<div style="max-width:600px; margin:auto; text-align:center; font-family:'Roboto', sans-serif;">
+  <h2 style="color:#2a9d8f; margin-bottom:10px;">Seguimiento de Trámites</h2>
+  <p>Ingrese su patente para ver el estado de su trámite:</p>
+
+  <input type="text" id="patente" placeholder="Ej: ABC123 o AE123YZ"
+         style="padding:10px; width:220px; border:1px solid #ccc; border-radius:5px; font-size:14px;">
+  <button onclick="buscar()" 
+          style="padding:10px 15px; background-color:#2a9d8f; color:white; border:none; border-radius:5px; font-size:14px; cursor:pointer;">
+    Consultar
+  </button>
+
+  <div id="resultado" style="margin-top:25px; transition:opacity 0.4s; opacity:0;"></div>
+</div>
+
+<script>
+function buscar() {
+  var patente = document.getElementById("patente").value.trim();
+  var div = document.getElementById("resultado");
+  div.style.opacity = 0;
+  div.innerHTML = "";
+
+  if(!patente) {
+    alert("Por favor ingrese la patente.");
+    return;
+  }
+
+  // Tu nueva URL de Apps Script
+  var url = "https://script.google.com/macros/s/AKfycbyeJV_O2G1kwQXFrHwzABwAJvqRVcWbJ9YRE0-Jeaj_N9343o_LwsjiHwW2ncm5--wR/exec?patente=" + patente;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if(!data || data.length === 0){
+        div.innerHTML = "<p style='color:red; font-weight:bold;'>No se encontró ningún trámite para esa patente.</p>";
+      } else {
+        var html = "";
+        data.forEach(d => {
+          var color = "#ffc107"; // Amarillo por defecto
+          if(d.estado.toLowerCase() == "finalizado") color = "#28a745"; // Verde
+          else if(d.estado.toLowerCase() == "pendiente") color = "#dc3545"; // Rojo
+          else if(d.estado.toLowerCase() == "en proceso") color = "#17a2b8"; // Azul
+
+          html += `
+            <div style="border:2px solid ${color}; border-radius:10px; padding:15px; margin-bottom:15px;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1); background-color:#f9f9f9; text-align:left;">
+              <p><strong>Patente:</strong> ${d.patente}</p>
+              <p><strong>Trámite:</strong> ${d.tramite}</p>
+              <p><strong>Estado:</strong> <span style="color:${color}; font-weight:bold;">${d.estado}</span></p>
+              <p><strong>Fecha:</strong> ${new Date(d.fecha).toLocaleDateString('es-AR')}</p>
+
+              <p><strong>Observaciones:</strong> ${d.observaciones}</p>
+            </div>
+          `;
+        });
+        div.innerHTML = html;
+      }
+      setTimeout(() => div.style.opacity = 1, 100);
+    })
+    .catch(err => {
+      console.error(err);
+      div.innerHTML = "<p style='color:red;'>Ocurrió un error al consultar los datos.</p>";
+      div.style.opacity = 1;
+    });
+}
+</script>
