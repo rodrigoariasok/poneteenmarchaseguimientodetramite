@@ -1,0 +1,134 @@
+<div class="seguimiento-container">
+  <h2>🔍 Seguimiento de Trámites</h2>
+  <input type="text" id="patenteInput" placeholder="Ingresá la patente (ej: ABC123)">
+  <button onclick="buscarTramite()">Buscar</button>
+  <div id="resultado"></div>
+</div>
+
+<style>
+:root {
+  --azul: #007bff;
+  --amarillo: #ffc107;
+  --verde: #28a745;
+  --rojo: #dc3545;
+}
+
+.seguimiento-container {
+  max-width: 500px;
+  margin: 40px auto;
+  background: #f9fafb;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+}
+.seguimiento-container h2 {
+  color: #2a9d8f;
+  margin-bottom: 20px;
+}
+#patenteInput {
+  width: 80%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+button {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background: #2a9d8f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+button:hover {
+  background: #21867a;
+}
+.card {
+  margin-top: 25px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: left;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  border-left: 5px solid #2a9d8f;
+}
+.estado {
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+.estado.azul {
+  background: #007bff33;
+  color: #007bff;
+}
+.estado.amarillo {
+  background: #fff3cd;
+  color: #856404;
+}
+.estado.verde {
+  background: #d4edda;
+  color: #155724;
+}
+.error {
+  color: #d9534f;
+  margin-top: 15px;
+}
+.estado.rojo {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+</style>
+
+<script>
+async function buscarTramite() {
+  const patente = document.getElementById("patenteInput").value.trim().toUpperCase();
+  const resultado = document.getElementById("resultado");
+  resultado.innerHTML = "⏳ Buscando...";
+  
+  if (!patente) {
+    resultado.innerHTML = "<p class='error'>⚠️ Ingresá una patente válida.</p>";
+    return;
+  }
+  
+  try {
+    const url = `https://script.google.com/macros/s/AKfycbyeJV_O2G1kwQXFrHwzABwAJvqRVcWbJ9YRE0-Jeaj_N9343o_LwsjiHwW2ncm5--wR/exec?patente=${patente}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Error de conexión');
+    const data = await res.json();
+    
+    if (data.length === 0) {
+      resultado.innerHTML = "<p class='error'>🚫 No se encontró ningún trámite con esa patente.</p>";
+      return;
+    }
+    
+    resultado.innerHTML = data.map(d => {
+  let claseEstado = '';
+  if (d.estado.toLowerCase().includes("iniciando")) claseEstado = 'azul';
+  else if (d.estado.toLowerCase().includes("proceso")) claseEstado = 'amarillo';
+  else if (d.estado.toLowerCase().includes("finalizado") || d.estado.toLowerCase().includes("entregado")) claseEstado = 'verde';
+  else if (d.estado.toLowerCase().includes("problema") || d.estado.toLowerCase().includes("observado") || d.estado.toLowerCase().includes("demora")) claseEstado = 'rojo';
+
+  return `
+    <div class="card" style="border-left:5px solid var(--${claseEstado})">
+      <div class="estado ${claseEstado}">${d.estado}</div>
+      <p><strong>Patente:</strong> ${d.patente}</p>
+      <p><strong>Trámite:</strong> ${d.tramite}</p>
+      <p><strong>Fecha:</strong> ${new Date(d.fecha).toLocaleDateString('es-AR')}</p>
+      <p><strong>Observaciones:</strong> ${d.observaciones || '-'}</p>
+    </div>
+  `;
+}).join('');
+    
+  } catch (err) {
+    resultado.innerHTML = "<p class='error'>⚠️ Error al obtener los datos. Verificá la conexión.</p>";
+    console.error(err);
+  }
+}
+</script>
