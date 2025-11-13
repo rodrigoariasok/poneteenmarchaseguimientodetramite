@@ -15,6 +15,7 @@
 :root {
   --azul: #007bff;
   --amarillo: #ffc107;
+  --naranja: #FF4500;
   --verde: #28a745;
   --rojo: #dc3545;
 }
@@ -77,6 +78,10 @@ button:hover {
   background: #fff3cd;
   color: #856404;
 }
+.estado.naranja {
+  background: #ffe5cc;
+  color: #b35a00;
+}
 .estado.verde {
   background: #d4edda;
   color: #155724;
@@ -121,10 +126,13 @@ async function buscarTramite() {
     
     resultado.innerHTML = data.map(d => {
       let claseEstado = '';
-      if (d.estado.toLowerCase().includes("iniciando")) claseEstado = 'azul';
-      else if (d.estado.toLowerCase().includes("proceso")) claseEstado = 'amarillo';
-      else if (d.estado.toLowerCase().includes("finalizado") || d.estado.toLowerCase().includes("entregado")) claseEstado = 'verde';
-      else if (d.estado.toLowerCase().includes("problema") || d.estado.toLowerCase().includes("observado") || d.estado.toLowerCase().includes("demora")) claseEstado = 'rojo';
+      const estado = d.estado.toLowerCase();
+
+      if (estado.includes("iniciando")) claseEstado = 'azul';
+      else if (estado.includes("proceso")) claseEstado = 'amarillo';
+      else if (estado.includes("espera") || estado.includes("pendiente") || estado.includes("turno")) claseEstado = 'naranja';
+      else if (estado.includes("finalizado") || estado.includes("entregado")) claseEstado = 'verde';
+      else if (estado.includes("problema") || estado.includes("observado") || estado.includes("demora")) claseEstado = 'rojo';
 
       return `
         <div class="card" style="border-left:5px solid var(--${claseEstado})">
